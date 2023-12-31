@@ -13,9 +13,15 @@ class ClickableSlider(QSlider):
             value = self.minimum() + ((self.maximum() - self.minimum()) * event.position().x()) / self.width()
             self.blockSignals(True)
             self.setValue(int(value))
-            if self.media_viewer:
-                self.media_viewer.set_position(int(value))
+            self.media_viewer.update_slider_position(int(value))
             self.blockSignals(False)
             event.accept()
-        else:
-            super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event):
+        # Calculate the slider value based on mouse position
+        value = self.minimum() + ((self.maximum() - self.minimum()) * event.position().x()) / self.width()
+        self.blockSignals(True)
+        self.setValue(int(value))
+        self.media_viewer.update_slider_position(int(value))
+        self.blockSignals(False)
+        event.accept()

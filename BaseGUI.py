@@ -29,7 +29,6 @@ class BaseGUI(QMainWindow):
         self.previous_file_button = None
         self.image_label = None
         self.video_widget = None
-        self.slider = None
         self.play_button = None
         self.player = None
         self.audio_output = None
@@ -41,11 +40,9 @@ class BaseGUI(QMainWindow):
         self.audio_output = QAudioOutput()
         self.player.setAudioOutput(self.audio_output)
 
-        self.update_timer = QTimer(self)
-
         # Window Title and Size
         self.setWindowTitle("Miguel's Media Explorer")
-        self.setGeometry(0, 0, 500, 350)
+        self.setGeometry(0, 0, 963, 600)
 
         # Initialize UI
         print("# Finished Base Initialization")
@@ -77,6 +74,8 @@ class BaseGUI(QMainWindow):
         self.image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.layout.addWidget(self.image_label)
 
+        self.player.durationChanged.connect(self.update_slider_range)
+
         # Player Controls
         self.setup_player_controls()
 
@@ -87,24 +86,9 @@ class BaseGUI(QMainWindow):
         # Setup for the sliders
         self.setup_position_slider()
 
-        # Timer for updating the position slider
-        self.update_timer.timeout.connect(self.update_slider_position)
-        self.update_timer.start(300)  # Update interval in milliseconds
-
         # Initial Hide
         self.video_widget.hide()
         self.image_label.hide()
-
-    def setup_title_image(self):
-        self.title_image_label = QLabel(self)
-        pixmap = QPixmap(
-            r'C:\Users\mjkwe\PycharmProjects\film_review_tool\MediaExplorerTitle.png')  # Replace with your image path
-        scaled_pixmap_title = pixmap.scaledToWidth(self.width(),
-                                                   Qt.TransformationMode.SmoothTransformation)
-        self.title_image_label.setPixmap(scaled_pixmap_title)
-        self.title_image_label.setFixedHeight(scaled_pixmap_title.height())
-        self.title_image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.layout.addWidget(self.title_image_label)
 
     def setup_player_controls(self):
         self.h_layout = QHBoxLayout()
@@ -119,9 +103,8 @@ class BaseGUI(QMainWindow):
             QStyle.StandardPixmap.SP_MediaPause)
         self.play_button.setIcon(pause_icon)
         self.play_button.clicked.connect(self.toggle_playback)
+        self.play_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.h_layout.addWidget(self.play_button)
-
-        self.setup_volume_slider()
 
         # Add spacer
         self.h_layout.addItem(QSpacerItem(40, 20, QSizePolicy.Policy.Expanding,
@@ -133,12 +116,12 @@ class BaseGUI(QMainWindow):
         self.image_label.hide()
         self.video_widget.show()
         self.play_button.show()
-        self.volume_slider.show()
         self.position_slider.show()
 
         self.player.setVideoOutput(self.video_widget)
         self.player.setSource(QUrl.fromLocalFile(path))
         self.player.play()
+        self.set_volume(0.5)
 
     def show_image(self, path):
         # Hide video related widgets and show image related widgets
@@ -182,23 +165,15 @@ class BaseGUI(QMainWindow):
                 QStyle.StandardPixmap.SP_MediaPlay)
             self.play_button.setIcon(play_icon)
 
-    def fast_forward(self):
-        current_position = self.player.position()
-        self.set_position(current_position + 10000)  # 10 seconds forward
-
-    def rewind(self):
-        current_position = self.player.position()
-        self.set_position(max(current_position - 10000,
-                              0))  # 10 seconds back, not going below 0
-
     def update_slider_range(self, duration):
-        if self.slider is not None:
-            self.slider.setRange(0, duration)
+        self.position_slider.setRange(0, duration)
 
     def setup_file_control_buttons(self):
         # Buttons for media control
         self.next_file_button = QPushButton("Next File", self)
+        self.next_file_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.previous_file_button = QPushButton("Previous File", self)
+        self.previous_file_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         # Layout for buttons
         self.button_layout = QHBoxLayout()
@@ -217,61 +192,24 @@ class BaseGUI(QMainWindow):
 
         self.setup_menu_bar()
 
-
-    def set_initial_file(self):
-        self.media_selector.open_folder()
-
-    def check_if_objects_exists(self):
-        print(f"self.title_image_label: {self.title_image_label}")
-        print(f"self.button_layout: {self.button_layout}")
-        print(f"self.media_selector: {self.media_selector}")
-        print(f"self.layout: {self.layout}")
-        print(f"self.next_file_button: {self.next_file_button}")
-        print(f"self.previous_file_button: {self.previous_file_button}")
-        print(f"self.image_label: {self.image_label}")
-        print(f"self.video_widget: {self.video_widget}")
-        print(f"self.slider: {self.slider}")
-        print(f"self.play_button: {self.play_button}")
-        print(f"self.player: {self.player}")
-        print(f"self.audio_output: {self.audio_output}")
-        print(f"self.update_timer: {self.update_timer}")
-        print(f"self.central_widget: {self.central_widget}")
-
-    def setup_volume_slider(self):
-        # Volume Slider
-        self.volume_slider = ClickableSlider(Qt.Orientation.Horizontal, self)
-        self.volume_slider.setRange(0, 100)  # Volume range from 0 to 100
-        self.volume_slider.setValue(50)  # Set to default volume
-        self.volume_slider.valueChanged.connect(self.set_volume)
-        self.volume_slider.sliderMoved.connect(self.set_volume_from_slider)
-
-        # Add slider to the layout
-        self.h_layout.addWidget(self.volume_slider)
-
     def setup_position_slider(self):
         # Video Position Slider
         self.position_slider = ClickableSlider(Qt.Orientation.Horizontal, self)
-        self.position_slider.setRange(0,
-                                      1000)  # Adjust this range based on video duration
-        self.position_slider.sliderMoved.connect(self.set_position)
+
+        self.position_slider.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+
+        self.position_slider.valueChanged.connect(self.update_slider_position)
 
         # Add sliders to the layout
         self.layout.addWidget(self.position_slider)
 
-    def update_slider_position(self):
-        if not self.position_slider.isSliderDown():
-            position = self.player.position()
-            self.position_slider.setValue(position)
+    def update_slider_position(self, position):
+        self.position_slider.blockSignals(True)
+        self.player.setPosition(position)
+        self.position_slider.blockSignals(False)
 
     def set_volume(self, volume):
-        self.audio_output.setVolume(volume / 100.0)  # Volume is a percentage
-
-    def set_volume_from_slider(self, position):
-        self.volume_slider.setValue(position)
-        self.set_volume(position)
-
-    def set_position(self, position):
-        self.player.setPosition(position)
+        self.audio_output.setVolume(volume)  # Volume is a percentage
 
     def setup_menu_bar(self):
         # Create the menu bar
@@ -282,7 +220,24 @@ class BaseGUI(QMainWindow):
 
         # Create an 'Open' action
         open_action = QAction("&Open", self)
-        open_action.triggered.connect(self.media_selector.open_folder)  # Connect to the open_folder method
+        open_action.triggered.connect(
+            self.media_selector.open_folder)  # Connect to the open_folder method
 
         # Add 'Open' action to 'File' menu
         file_menu.addAction(open_action)
+
+    def setup_title_image(self):
+        self.title_image_label = QLabel(self)
+        pixmap = QPixmap(
+            r'C:\Users\mjkwe\PycharmProjects\film_review_tool\MediaExplorerTitle.png')  # Replace with your image path
+        scaled_pixmap_title = pixmap.scaledToWidth(self.width(),
+                                                   Qt.TransformationMode.SmoothTransformation)
+        self.title_image_label.setPixmap(scaled_pixmap_title)
+        self.title_image_label.setFixedHeight(scaled_pixmap_title.height())
+        self.title_image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.layout.addWidget(self.title_image_label)
+
+    def set_initial_file(self, folder_path):
+        if folder_path:
+            self.media_selector.load_media_files(folder_path)
+            self.media_selector.show_next_file()

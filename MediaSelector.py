@@ -19,7 +19,6 @@ class MediaSelector:
         print("Opening Folder...")
         folder_path = QFileDialog.getExistingDirectory(None, "Select Folder")
 
-        print("Finished picking folder")
         if folder_path:
             self.load_media_files(folder_path)
             self.show_next_file()

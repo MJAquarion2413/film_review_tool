@@ -1,9 +1,10 @@
 import sys
-from PyQt6.QtWidgets import QApplication
+from PyQt6.QtWidgets import QApplication, QFileDialog
 import BaseGUI as bg
 
 
 def center_width(base_gui):
+    #TODO fix this to center frame on screen
     window_size = base_gui.geometry()
     center_x = (1280 - window_size.width()) // 2
     base_gui.move(center_x, 0)
@@ -13,12 +14,14 @@ def main():
     # try:
     app = QApplication(sys.argv)
     viewer = bg.BaseGUI()
-    viewer.show()
     viewer.setup_media_selector()
-    print("Setting Initial File Opened")
-    viewer.check_if_objects_exists()
-    viewer.set_initial_file()
+    # make a qdialog to open a folder popup
+    folder_path = QFileDialog.getExistingDirectory(None, "Select Folder")
+    viewer.set_initial_file(folder_path)
     center_width(viewer)
+    viewer.show()
+
+    print("Setting Initial File Opened")
 
     sys.exit(app.exec())
 
