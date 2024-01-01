@@ -51,8 +51,10 @@ class ArrowKeyFilter(QObject):
                 else:
                     self.media_viewer.showFullScreen()
 
-            #Print window size with f strings indicating height and width
+            # Print window size with f strings indicating height and width
             elif event.key() == Qt.Key.Key_S:
-                print(f"Height: {self.media_viewer.height()}, Width: {self.media_viewer.width()}")
+                print(
+                    f"Height: {self.media_viewer.height()}, "
+                    f"Width: {self.media_viewer.width()}")
 
         return False
