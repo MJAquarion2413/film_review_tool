@@ -1,0 +1,12 @@
+{
+    "layout": [
+        {
+            "widget": "Video_Player",
+            "position": "central",
+            "features": {
+                "width": 600,
+                "height": 400
+            }
+        }
+    ]
+}
